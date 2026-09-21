@@ -1,0 +1,19 @@
+[
+  {
+    "event_type": "DECISION_EVENT",
+    "payload": {
+      "candle_id": "NZDCAD_021230",
+      "direction": "CALL",
+      "confidence": 0.86
+    },
+    "timestamp": "2026-09-19T16:26:27.085684+00:00"
+  },
+  {
+    "event_type": "OUTCOME_EVENT",
+    "payload": {
+      "candle_id": "NZDCAD_021230",
+      "result": "CALL"
+    },
+    "timestamp": "2026-09-19T16:26:27.086684+00:00"
+  }
+]

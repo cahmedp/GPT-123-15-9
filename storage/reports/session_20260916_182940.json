@@ -1,0 +1,1306 @@
+{
+  "app": "Personal AI Trading Analyst",
+  "version": "1.0.0",
+  "mode": "CONSULTANT",
+  "execution_enabled": false,
+  "asset": "GBPUSD_otc",
+  "generated_at": 1789572580.6399002,
+  "fatal_error": null,
+  "session": {
+    "started_at": "2026-09-16 15:28:20.133988+00:00",
+    "now": "2026-09-16 15:29:40.639900+00:00",
+    "elapsed_seconds": 80.51600000000326,
+    "remaining_seconds": 28719.483999999997,
+    "max_runtime_seconds": 28800.0,
+    "stop_requested": true,
+    "stop_reason": "market_stream_ended"
+  },
+  "connector": {
+    "connected": false,
+    "asset": "GBPUSD_otc",
+    "reconnect_count": 0,
+    "last_error": null
+  },
+  "memory": {
+    "total_cases": 3,
+    "resolved_cases": 2,
+    "unresolved_cases": 1,
+    "bullish_cases": 0,
+    "bearish_cases": 0,
+    "wait_cases": 3,
+    "positive_outcomes": 1,
+    "negative_outcomes": 1,
+    "neutral_outcomes": 0,
+    "average_confidence": 0.0,
+    "average_uncertainty": 0.75,
+    "latest_case_timestamp": 1789579770.0
+  },
+  "knowledge": {
+    "total_items": 0,
+    "active_items": 0,
+    "inactive_items": 0,
+    "total_observations": 0,
+    "resolved_observations": 0,
+    "empirical_success_rate": null,
+    "average_confidence": 0.0,
+    "average_reliability": 0.0
+  },
+  "journal": {
+    "total": 3,
+    "closed": 2,
+    "wins": 1,
+    "losses": 1,
+    "win_rate": 0.5
+  },
+  "learning": null,
+  "goals": [],
+  "pending_analytical_evaluations": 1,
+  "last_market": {
+    "timestamp": 1789579740.0,
+    "asset": "GBPUSD_otc",
+    "price": 1.30327,
+    "base_30s": {
+      "timeframe_seconds": 30,
+      "technical": {
+        "timestamp": 1789579740.0,
+        "asset": "GBPUSD_otc",
+        "timeframe_seconds": 30,
+        "open": 1.30286,
+        "high": 1.30342,
+        "low": 1.30281,
+        "close": 1.30327,
+        "candle_range": 0.0006099999999999994,
+        "body_size": 0.00041000000000002146,
+        "body_ratio": 0.6721311475410194,
+        "upper_wick": 0.0001500000000000945,
+        "lower_wick": 4.999999999988347e-05,
+        "upper_wick_ratio": 0.24590163934441744,
+        "lower_wick_ratio": 0.08196721311456315,
+        "close_position": 0.7540983606555826,
+        "direction": 1,
+        "atr": 0.0004750000000000191,
+        "average_range": 0.00042214285714287883,
+        "range_vs_atr": 1.2842105263157366,
+        "realized_volatility": 0.00030581883989392515,
+        "price_zscore": -0.7552282328931428,
+        "ema_fast": 1.3033702888174237,
+        "ema_slow": 1.3040129087793226,
+        "ema_spread": -0.0006426199618989603,
+        "ema_spread_normalized": -1.3528841303135464,
+        "rsi": 41.87852684515231,
+        "momentum_1": 0.00041000000000002146,
+        "momentum_3": -0.0003300000000001635,
+        "momentum_5": -0.0004300000000001525,
+        "return_1": 0.00031469229234137863,
+        "return_3": -0.0002531451365450632,
+        "return_5": -0.0003298304824730369,
+        "efficiency_ratio": 0.49253731343280416,
+        "tick_activity": 1.0,
+        "tick_activity_ratio": 1.0,
+        "history_size": 142,
+        "warmup_complete": true
+      },
+      "structure": {
+        "timestamp": 1789579740.0,
+        "asset": "GBPUSD_otc",
+        "timeframe_seconds": 30,
+        "close": 1.30327,
+        "structure_state": "BEARISH",
+        "trend_score": -1.0,
+        "structure_confidence": 0.85,
+        "last_swing_high": {
+          "index": 137,
+          "timestamp": 1789572120.0,
+          "price": 1.30371,
+          "kind": "HIGH",
+          "label": "LH"
+        },
+        "previous_swing_high": {
+          "index": 122,
+          "timestamp": 1789571670.0,
+          "price": 1.30664,
+          "kind": "HIGH",
+          "label": "HH"
+        },
+        "last_swing_low": {
+          "index": 135,
+          "timestamp": 1789572060.0,
+          "price": 1.30265,
+          "kind": "LOW",
+          "label": "LL"
+        },
+        "previous_swing_low": {
+          "index": 111,
+          "timestamp": 1789571340.0,
+          "price": 1.30504,
+          "kind": "LOW",
+          "label": "LL"
+        },
+        "nearest_support": {
+          "center": 1.30265,
+          "lower": 1.3025312500000001,
+          "upper": 1.30276875,
+          "kind": "SUPPORT",
+          "touches": 1,
+          "strength": 0.1875,
+          "last_touch_time": 1789572060.0
+        },
+        "nearest_resistance": {
+          "center": 1.30371,
+          "lower": 1.30359125,
+          "upper": 1.3038287499999999,
+          "kind": "RESISTANCE",
+          "touches": 1,
+          "strength": 0.1875,
+          "last_touch_time": 1789572120.0
+        },
+        "support_distance": 0.0006199999999998429,
+        "resistance_distance": 0.00043999999999999595,
+        "break_of_structure": "NONE",
+        "change_of_character": "NONE",
+        "range_high": 1.30664,
+        "range_low": 1.30265,
+        "range_position": 0.1553884711779079,
+        "compression_ratio": 0.7889823032185224,
+        "swing_highs": [
+          {
+            "index": 59,
+            "timestamp": 1789569780.0,
+            "price": 1.30627,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 71,
+            "timestamp": 1789570140.0,
+            "price": 1.30639,
+            "kind": "HIGH",
+            "label": "HH"
+          },
+          {
+            "index": 74,
+            "timestamp": 1789570230.0,
+            "price": 1.30631,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 78,
+            "timestamp": 1789570350.0,
+            "price": 1.3062,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 84,
+            "timestamp": 1789570530.0,
+            "price": 1.3068,
+            "kind": "HIGH",
+            "label": "HH"
+          },
+          {
+            "index": 88,
+            "timestamp": 1789570650.0,
+            "price": 1.30648,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 95,
+            "timestamp": 1789570860.0,
+            "price": 1.30647,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 100,
+            "timestamp": 1789571010.0,
+            "price": 1.30606,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 106,
+            "timestamp": 1789571190.0,
+            "price": 1.30637,
+            "kind": "HIGH",
+            "label": "HH"
+          },
+          {
+            "index": 115,
+            "timestamp": 1789571460.0,
+            "price": 1.30617,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 122,
+            "timestamp": 1789571670.0,
+            "price": 1.30664,
+            "kind": "HIGH",
+            "label": "HH"
+          },
+          {
+            "index": 137,
+            "timestamp": 1789572120.0,
+            "price": 1.30371,
+            "kind": "HIGH",
+            "label": "LH"
+          }
+        ],
+        "swing_lows": [
+          {
+            "index": 55,
+            "timestamp": 1789569660.0,
+            "price": 1.3055,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 62,
+            "timestamp": 1789569870.0,
+            "price": 1.30462,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 66,
+            "timestamp": 1789569990.0,
+            "price": 1.30449,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 70,
+            "timestamp": 1789570110.0,
+            "price": 1.30541,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 75,
+            "timestamp": 1789570260.0,
+            "price": 1.30555,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 79,
+            "timestamp": 1789570380.0,
+            "price": 1.3057,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 86,
+            "timestamp": 1789570590.0,
+            "price": 1.30599,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 91,
+            "timestamp": 1789570740.0,
+            "price": 1.30541,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 97,
+            "timestamp": 1789570920.0,
+            "price": 1.3056,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 103,
+            "timestamp": 1789571100.0,
+            "price": 1.30522,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 111,
+            "timestamp": 1789571340.0,
+            "price": 1.30504,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 135,
+            "timestamp": 1789572060.0,
+            "price": 1.30265,
+            "kind": "LOW",
+            "label": "LL"
+          }
+        ],
+        "support_zones": [
+          {
+            "center": 1.30265,
+            "lower": 1.3025312500000001,
+            "upper": 1.30276875,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789572060.0
+          },
+          {
+            "center": 1.30504,
+            "lower": 1.30492125,
+            "upper": 1.30515875,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789571340.0
+          },
+          {
+            "center": 1.30522,
+            "lower": 1.30510125,
+            "upper": 1.30533875,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789571100.0
+          },
+          {
+            "center": 1.3056,
+            "lower": 1.3054812500000001,
+            "upper": 1.30571875,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789570920.0
+          }
+        ],
+        "resistance_zones": [
+          {
+            "center": 1.3061150000000001,
+            "lower": 1.3059962500000002,
+            "upper": 1.30623375,
+            "kind": "RESISTANCE",
+            "touches": 2,
+            "strength": 0.38788659793814434,
+            "last_touch_time": 1789571460.0
+          },
+          {
+            "center": 1.3064200000000001,
+            "lower": 1.3063012500000002,
+            "upper": 1.30653875,
+            "kind": "RESISTANCE",
+            "touches": 2,
+            "strength": 0.38429054054054057,
+            "last_touch_time": 1789571190.0
+          },
+          {
+            "center": 1.30371,
+            "lower": 1.30359125,
+            "upper": 1.3038287499999999,
+            "kind": "RESISTANCE",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789572120.0
+          },
+          {
+            "center": 1.30664,
+            "lower": 1.30652125,
+            "upper": 1.30675875,
+            "kind": "RESISTANCE",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789571670.0
+          }
+        ]
+      },
+      "directional_pressure": -0.5686853831280005,
+      "trend_quality": 0.7970149253731217,
+      "noise_score": 0.2669929043308019,
+      "expansion_score": 0.601288467069311,
+      "compression_score": 0.4817292026685425,
+      "rejection_score": 0.5391952309986605,
+      "momentum_score": 0.8126315789475408,
+      "location_score": 0.5368421052631808,
+      "quality_score": 0.7432498873192643,
+      "notes": [
+        "bearish directional pressure"
+      ]
+    },
+    "setup_1m": {
+      "timeframe_seconds": 60,
+      "technical": {
+        "timestamp": 1789579680.0,
+        "asset": "GBPUSD_otc",
+        "timeframe_seconds": 60,
+        "open": 1.3029,
+        "high": 1.30302,
+        "low": 1.30281,
+        "close": 1.30286,
+        "candle_range": 0.00021000000000004349,
+        "body_size": 4.0000000000040004e-05,
+        "body_ratio": 0.19047619047634154,
+        "upper_wick": 0.00012000000000012001,
+        "lower_wick": 4.999999999988347e-05,
+        "upper_wick_ratio": 0.5714285714290246,
+        "lower_wick_ratio": 0.2380952380946339,
+        "close_position": 0.2380952380946339,
+        "direction": -1,
+        "atr": 0.0007049999999999874,
+        "average_range": 0.0006621428571428492,
+        "range_vs_atr": 0.2978723404255989,
+        "realized_volatility": 0.0003908637306708168,
+        "price_zscore": -1.8561531528987028,
+        "ema_fast": 1.303918520781587,
+        "ema_slow": 1.304697672250176,
+        "ema_spread": -0.0007791514685888679,
+        "ema_spread_normalized": -1.105179388069336,
+        "rsi": 27.11293531474645,
+        "momentum_1": -0.000740000000000185,
+        "momentum_3": -9.000000000014552e-05,
+        "momentum_5": -0.000740000000000185,
+        "return_1": -0.0005676587910403708,
+        "return_3": -6.907402432954068e-05,
+        "return_5": -0.0005676587910403708,
+        "efficiency_ratio": 0.3243847874720597,
+        "tick_activity": 1.0,
+        "tick_activity_ratio": 1.0,
+        "history_size": 71,
+        "warmup_complete": true
+      },
+      "structure": {
+        "timestamp": 1789579680.0,
+        "asset": "GBPUSD_otc",
+        "timeframe_seconds": 60,
+        "close": 1.30286,
+        "structure_state": "TRANSITION",
+        "trend_score": -0.2,
+        "structure_confidence": 0.85,
+        "last_swing_high": {
+          "index": 61,
+          "timestamp": 1789571640.0,
+          "price": 1.30664,
+          "kind": "HIGH",
+          "label": "HH"
+        },
+        "previous_swing_high": {
+          "index": 53,
+          "timestamp": 1789571160.0,
+          "price": 1.30637,
+          "kind": "HIGH",
+          "label": "LH"
+        },
+        "last_swing_low": {
+          "index": 68,
+          "timestamp": 1789572060.0,
+          "price": 1.30265,
+          "kind": "LOW",
+          "label": "LL"
+        },
+        "previous_swing_low": {
+          "index": 56,
+          "timestamp": 1789571340.0,
+          "price": 1.30504,
+          "kind": "LOW",
+          "label": "LL"
+        },
+        "nearest_support": {
+          "center": 1.30265,
+          "lower": 1.30247375,
+          "upper": 1.30282625,
+          "kind": "SUPPORT",
+          "touches": 1,
+          "strength": 0.1875,
+          "last_touch_time": 1789572060.0
+        },
+        "nearest_resistance": {
+          "center": 1.3064,
+          "lower": 1.30622375,
+          "upper": 1.30657625,
+          "kind": "RESISTANCE",
+          "touches": 6,
+          "strength": 0.7936046511627907,
+          "last_touch_time": 1789571160.0
+        },
+        "support_distance": 0.00020999999999982144,
+        "resistance_distance": 0.0035400000000000986,
+        "break_of_structure": "NONE",
+        "change_of_character": "NONE",
+        "range_high": 1.30664,
+        "range_low": 1.30265,
+        "range_position": 0.05263157894732449,
+        "compression_ratio": 1.845498549479769,
+        "swing_highs": [
+          {
+            "index": 5,
+            "timestamp": 1789568280.0,
+            "price": 1.30925,
+            "kind": "HIGH",
+            "label": "H"
+          },
+          {
+            "index": 14,
+            "timestamp": 1789568820.0,
+            "price": 1.30775,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 23,
+            "timestamp": 1789569360.0,
+            "price": 1.30653,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 27,
+            "timestamp": 1789569600.0,
+            "price": 1.30637,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 30,
+            "timestamp": 1789569780.0,
+            "price": 1.30627,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 36,
+            "timestamp": 1789570140.0,
+            "price": 1.30639,
+            "kind": "HIGH",
+            "label": "HH"
+          },
+          {
+            "index": 42,
+            "timestamp": 1789570500.0,
+            "price": 1.3068,
+            "kind": "HIGH",
+            "label": "HH"
+          },
+          {
+            "index": 48,
+            "timestamp": 1789570860.0,
+            "price": 1.30647,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 53,
+            "timestamp": 1789571160.0,
+            "price": 1.30637,
+            "kind": "HIGH",
+            "label": "LH"
+          },
+          {
+            "index": 61,
+            "timestamp": 1789571640.0,
+            "price": 1.30664,
+            "kind": "HIGH",
+            "label": "HH"
+          }
+        ],
+        "swing_lows": [
+          {
+            "index": 3,
+            "timestamp": 1789568160.0,
+            "price": 1.30798,
+            "kind": "LOW",
+            "label": "L"
+          },
+          {
+            "index": 10,
+            "timestamp": 1789568580.0,
+            "price": 1.30636,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 18,
+            "timestamp": 1789569060.0,
+            "price": 1.30504,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 26,
+            "timestamp": 1789569540.0,
+            "price": 1.30536,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 33,
+            "timestamp": 1789569960.0,
+            "price": 1.30449,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 38,
+            "timestamp": 1789570260.0,
+            "price": 1.30555,
+            "kind": "LOW",
+            "label": "HL"
+          },
+          {
+            "index": 46,
+            "timestamp": 1789570740.0,
+            "price": 1.30541,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 52,
+            "timestamp": 1789571100.0,
+            "price": 1.30522,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 56,
+            "timestamp": 1789571340.0,
+            "price": 1.30504,
+            "kind": "LOW",
+            "label": "LL"
+          },
+          {
+            "index": 68,
+            "timestamp": 1789572060.0,
+            "price": 1.30265,
+            "kind": "LOW",
+            "label": "LL"
+          }
+        ],
+        "support_zones": [
+          {
+            "center": 1.3053299999999999,
+            "lower": 1.30515375,
+            "upper": 1.3055062499999999,
+            "kind": "SUPPORT",
+            "touches": 3,
+            "strength": 0.6009615384615384,
+            "last_touch_time": 1789571100.0
+          },
+          {
+            "center": 1.30265,
+            "lower": 1.30247375,
+            "upper": 1.30282625,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789572060.0
+          },
+          {
+            "center": 1.30504,
+            "lower": 1.30486375,
+            "upper": 1.30521625,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789571340.0
+          },
+          {
+            "center": 1.30555,
+            "lower": 1.30537375,
+            "upper": 1.30572625,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789570260.0
+          },
+          {
+            "center": 1.30449,
+            "lower": 1.30431375,
+            "upper": 1.30466625,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789569960.0
+          }
+        ],
+        "resistance_zones": [
+          {
+            "center": 1.3064,
+            "lower": 1.30622375,
+            "upper": 1.30657625,
+            "kind": "RESISTANCE",
+            "touches": 6,
+            "strength": 0.7936046511627907,
+            "last_touch_time": 1789571160.0
+          },
+          {
+            "center": 1.3067199999999999,
+            "lower": 1.30654375,
+            "upper": 1.3068962499999999,
+            "kind": "RESISTANCE",
+            "touches": 2,
+            "strength": 0.40604575163398693,
+            "last_touch_time": 1789571640.0
+          }
+        ]
+      },
+      "directional_pressure": -0.5004820624357391,
+      "trend_quality": 0.4497539149888239,
+      "noise_score": 0.6360178970916626,
+      "expansion_score": 0.2266464032422089,
+      "compression_score": 0.5083190406180779,
+      "rejection_score": 0.9285714285716098,
+      "momentum_score": 0.7269503546101848,
+      "location_score": 0.8510638297873581,
+      "quality_score": 0.628337736208382,
+      "notes": [
+        "bearish directional pressure",
+        "strong upper-wick rejection"
+      ]
+    },
+    "context_5m": {
+      "timeframe_seconds": 300,
+      "technical": {
+        "timestamp": 1789572000.0,
+        "asset": "GBPUSD_otc",
+        "timeframe_seconds": 300,
+        "open": 1.30369,
+        "high": 1.30371,
+        "low": 1.30265,
+        "close": 1.3036,
+        "candle_range": 0.0010599999999998388,
+        "body_size": 8.999999999992347e-05,
+        "body_ratio": 0.0849056603772992,
+        "upper_wick": 1.999999999990898e-05,
+        "lower_wick": 0.0009500000000000064,
+        "upper_wick_ratio": 0.018867924528218886,
+        "lower_wick_ratio": 0.8962264150944819,
+        "close_position": 0.8962264150944819,
+        "direction": -1,
+        "atr": 0.0016214285714285831,
+        "average_range": 0.0016214285714285831,
+        "range_vs_atr": 0.6537444933919664,
+        "realized_volatility": 0.0007943172021576126,
+        "price_zscore": -1.73054313821445,
+        "ema_fast": 1.305234654799286,
+        "ema_slow": 1.306296503023184,
+        "ema_spread": -0.0010618482238979876,
+        "ema_spread_normalized": -0.6548843671617498,
+        "rsi": 26.09450572032584,
+        "momentum_1": -0.00010999999999983245,
+        "momentum_3": -0.0018099999999998673,
+        "momentum_5": -0.0022699999999999942,
+        "return_1": -8.437459250898449e-05,
+        "return_3": -0.0013865375629111831,
+        "return_5": -0.0017383047317114375,
+        "efficiency_ratio": 0.43418803418803853,
+        "tick_activity": 1.0,
+        "tick_activity_ratio": 1.0,
+        "history_size": 15,
+        "warmup_complete": false
+      },
+      "structure": {
+        "timestamp": 1789572000.0,
+        "asset": "GBPUSD_otc",
+        "timeframe_seconds": 300,
+        "close": 1.3036,
+        "structure_state": "TRANSITION",
+        "trend_score": -0.325,
+        "structure_confidence": 0.55,
+        "last_swing_high": {
+          "index": 12,
+          "timestamp": 1789571400.0,
+          "price": 1.30664,
+          "kind": "HIGH",
+          "label": "LH"
+        },
+        "previous_swing_high": {
+          "index": 9,
+          "timestamp": 1789570500.0,
+          "price": 1.3068,
+          "kind": "HIGH",
+          "label": "H"
+        },
+        "last_swing_low": {
+          "index": 7,
+          "timestamp": 1789569900.0,
+          "price": 1.30449,
+          "kind": "LOW",
+          "label": "L"
+        },
+        "previous_swing_low": null,
+        "nearest_support": null,
+        "nearest_resistance": {
+          "center": 1.3067199999999999,
+          "lower": 1.3063146428571428,
+          "upper": 1.307125357142857,
+          "kind": "RESISTANCE",
+          "touches": 2,
+          "strength": 0.525,
+          "last_touch_time": 1789571400.0
+        },
+        "support_distance": null,
+        "resistance_distance": 0.0031199999999997896,
+        "break_of_structure": "NONE",
+        "change_of_character": "NONE",
+        "range_high": 1.30925,
+        "range_low": 1.30265,
+        "range_position": 0.14393939393939623,
+        "compression_ratio": 0.9049097794479489,
+        "swing_highs": [
+          {
+            "index": 9,
+            "timestamp": 1789570500.0,
+            "price": 1.3068,
+            "kind": "HIGH",
+            "label": "H"
+          },
+          {
+            "index": 12,
+            "timestamp": 1789571400.0,
+            "price": 1.30664,
+            "kind": "HIGH",
+            "label": "LH"
+          }
+        ],
+        "swing_lows": [
+          {
+            "index": 7,
+            "timestamp": 1789569900.0,
+            "price": 1.30449,
+            "kind": "LOW",
+            "label": "L"
+          }
+        ],
+        "support_zones": [
+          {
+            "center": 1.30449,
+            "lower": 1.3040846428571429,
+            "upper": 1.304895357142857,
+            "kind": "SUPPORT",
+            "touches": 1,
+            "strength": 0.1875,
+            "last_touch_time": 1789569900.0
+          }
+        ],
+        "resistance_zones": [
+          {
+            "center": 1.3067199999999999,
+            "lower": 1.3063146428571428,
+            "upper": 1.307125357142857,
+            "kind": "RESISTANCE",
+            "touches": 2,
+            "strength": 0.525,
+            "last_touch_time": 1789571400.0
+          }
+        ]
+      },
+      "directional_pressure": -0.4407903290885353,
+      "trend_quality": 0.45114630546565293,
+      "noise_score": 0.6400266086115337,
+      "expansion_score": 0.2780120799046486,
+      "compression_score": 0.5485638079592994,
+      "rejection_score": 0.9688679245283445,
+      "momentum_score": 0.7012334801761305,
+      "location_score": 0.037885462555137916,
+      "quality_score": 0.4151050431903601,
+      "notes": [
+        "bearish directional pressure",
+        "strong lower-wick rejection"
+      ]
+    },
+    "multi_timeframe_bias": -0.493656199269923,
+    "alignment_score": 0.9840131182450669,
+    "conflict_score": 0.0,
+    "bullish_pressure": 0.0,
+    "bearish_pressure": 0.493656199269923,
+    "directional_conviction": 0.49010478879152997,
+    "compression_pressure": 0.5010608367444934,
+    "expansion_potential": 0.40323948172583796,
+    "rejection_pressure": 0.7399278041786453,
+    "noise_score": 0.45230714301520647,
+    "market_quality": 0.6045871811917842,
+    "context_state": "BEARISH_CONTEXT",
+    "readiness_state": "WARMUP",
+    "reasons": [
+      "multi-timeframe pressure leans bearish",
+      "30s, 1m and 5m are well aligned",
+      "market readiness: warmup"
+    ]
+  },
+  "last_regime": {
+    "timestamp": 1789579740.0,
+    "asset": "GBPUSD_otc",
+    "price": 1.30327,
+    "primary_regime": "BEARISH_TREND",
+    "secondary_regime": "RANGE",
+    "directional_bias": -0.3237255180564485,
+    "regime_confidence": 0.6570279166277987,
+    "trend_strength": 0.5616133276812688,
+    "compression_strength": 0.32568954388392074,
+    "expansion_strength": 0.3921313978033596,
+    "range_strength": 0.3946909130169145,
+    "noise_strength": 0.3313842858091239,
+    "transition_strength": 0.38767733446374625,
+    "volatility_state": "NORMAL",
+    "structure_state": "TRANSITION",
+    "alignment_state": "ALIGNED",
+    "suitable_for_directional_analysis": false,
+    "caution_required": false,
+    "reasons": [
+      "primary regime: bearish_trend",
+      "secondary regime: range",
+      "timeframe alignment: aligned",
+      "volatility: normal",
+      "directional regime bias is bearish"
+    ]
+  },
+  "last_debate": {
+    "timestamp": 1789579740.0,
+    "asset": "GBPUSD_otc",
+    "price": 1.30327,
+    "opinions": [
+      {
+        "agent": "trend_agent",
+        "direction": "BEARISH",
+        "score": -0.4296099389974664,
+        "confidence": 0.5302959884719461,
+        "uncertainty": 0.3255067282087374,
+        "veto": true,
+        "reasons": [
+          "5m context supports bearish trend",
+          "1m setup supports bearish continuation",
+          "30s trigger is bearish",
+          "timeframes show strong directional agreement",
+          "regime supports directional analysis: bearish_trend",
+          "trend agent requests a safety veto"
+        ],
+        "evidence": {
+          "context_5m_score": -0.363569,
+          "setup_1m_score": -0.398982,
+          "trigger_30s_score": -0.70757,
+          "regime_score": -0.368996,
+          "multi_timeframe_bias": -0.493656,
+          "alignment_score": 0.984013,
+          "conflict_score": 0.0,
+          "trend_strength": 0.519833,
+          "structure_quality": 0.715,
+          "momentum_quality": 0.732514,
+          "noise_penalty": 0.29243,
+          "regime": "BEARISH_TREND"
+        }
+      },
+      {
+        "agent": "liquidity_agent",
+        "direction": "WAIT",
+        "score": 0.053704939801512995,
+        "confidence": 0.24256214053407227,
+        "uncertainty": 0.4131926786793704,
+        "veto": true,
+        "reasons": [
+          "strong liquidity sweep / fake-break evidence",
+          "rejection behaviour is materially present",
+          "1m support location is available for liquidity context",
+          "1m resistance location is available for liquidity context",
+          "liquidity evidence is not decisive (score=0.05, confidence=0.24)",
+          "liquidity agent requests a safety veto"
+        ],
+        "evidence": {
+          "score_30s": 0.006814,
+          "score_1m": -0.028786,
+          "score_5m": 0.117321,
+          "location_score": 0.190814,
+          "structure_score": 0.0,
+          "regime_score": -0.368996,
+          "fake_break_strength": 0.56946,
+          "retest_strength": 0.0,
+          "wick_cluster_strength": 0.0,
+          "rejection_strength": 0.576913,
+          "breakout_strength": 0.0,
+          "compression_strength": 0.0,
+          "pattern_conflict": 0.315,
+          "liquidity_quality": 0.591127,
+          "noise_penalty": 0.394615,
+          "regime": "BEARISH_TREND"
+        }
+      },
+      {
+        "agent": "pattern_agent",
+        "direction": "WAIT",
+        "score": 0.13629674381230245,
+        "confidence": 0.32056787047603974,
+        "uncertainty": 0.3560124175236687,
+        "veto": true,
+        "reasons": [
+          "dominant pattern: fake_break (bullish)",
+          "5m pattern evidence is bullish",
+          "pattern evidence is not decisive (score=0.14, confidence=0.32)",
+          "pattern agent requests a safety veto"
+        ],
+        "evidence": {
+          "score_30s": 0.06814,
+          "score_1m": -0.076763,
+          "score_5m": 0.209164,
+          "pattern_quality": 0.595981,
+          "internal_conflict": 0.0,
+          "cross_timeframe_conflict": 0.421219,
+          "confirmation_score": 0.410015,
+          "sequence_bonus": 0.018223,
+          "regime_adjustment": -0.052562,
+          "dominant_pattern": "FAKE_BREAK",
+          "dominant_pattern_direction": "BULLISH",
+          "regime": "BEARISH_TREND"
+        }
+      },
+      {
+        "agent": "risk_agent",
+        "direction": "WAIT",
+        "score": -0.21888877357422912,
+        "confidence": 0.6228163505974326,
+        "uncertainty": 0.22109226877213461,
+        "veto": true,
+        "reasons": [
+          "market readiness is unsafe: warmup",
+          "overall market risk is low",
+          "risk agent requests a safety veto"
+        ],
+        "evidence": {
+          "risk_score": 0.260995,
+          "safety_score": 0.739005,
+          "noise_risk": 0.407496,
+          "timeframe_conflict_risk": 0.0,
+          "pattern_conflict_risk": 0.257601,
+          "regime_risk": 0.235743,
+          "volatility_risk": 0.214825,
+          "compression_risk": 0.0,
+          "structure_risk": 0.233333,
+          "readiness_risk": 1.0,
+          "data_risk": 0.003623,
+          "outcome_risk": 0.333333,
+          "market_quality": 0.604587,
+          "regime_confidence": 0.657028,
+          "regime": "BEARISH_TREND"
+        }
+      }
+    ],
+    "weighted_score": -0.1582415908077009,
+    "consensus_direction": "WAIT",
+    "consensus_confidence": 0.11828994776777324,
+    "disagreement_score": 0.1973860024214653,
+    "uncertainty_score": 0.3378791948704539,
+    "bullish_weight": 0.0,
+    "bearish_weight": 0.26787364462399355,
+    "wait_weight": 0.7321263553760065,
+    "veto_active": true,
+    "veto_agents": [
+      "trend_agent",
+      "liquidity_agent",
+      "pattern_agent",
+      "risk_agent"
+    ],
+    "ready_for_fusion": false,
+    "reasons": [
+      "bearish agents: trend_agent",
+      "debate consensus: wait",
+      "weighted score=-0.16",
+      "confidence=0.12",
+      "disagreement=0.20",
+      "uncertainty=0.34",
+      "vote weights B=0.00 S=0.27 W=0.73",
+      "active veto: trend_agent, liquidity_agent, pattern_agent, risk_agent",
+      "multi-agent debate requires WAIT or more confirmation"
+    ]
+  },
+  "last_world": {
+    "state": {
+      "timestamp": 1789579740.0,
+      "asset": "GBPUSD_otc",
+      "price": 1.30327,
+      "directional_bias": -0.32608867416262793,
+      "directional_strength": 0.3490753110207655,
+      "trend_strength": 0.5616133276812688,
+      "compression": 0.5010608367444934,
+      "expansion": 0.40323948172583796,
+      "noise": 0.45230714301520647,
+      "conflict": 0.1973860024214653,
+      "uncertainty": 0.3378791948704539,
+      "market_quality": 0.6045871811917842,
+      "bullish_memory_support": 0.0,
+      "bearish_memory_support": 0.0,
+      "wait_memory_support": 1.0,
+      "memory_confidence": 0.5988393318075194,
+      "regime": "BEARISH_TREND",
+      "readiness": "WARMUP"
+    },
+    "continuation_prior": 0.19752563066219073,
+    "reversal_prior": 0.16437781182041086,
+    "range_prior": 0.25496041146563614,
+    "expansion_prior": 0.23601144103422966,
+    "failure_prior": 0.14712470501753253,
+    "memory_cases_used": 1,
+    "similar_cases": [
+      {
+        "case": {
+          "case_id": "74137d8de99d4e6fa775ad3524337872",
+          "created_at": 1789572510.6771533,
+          "asset": "GBPUSD_otc",
+          "timeframe_seconds": 30,
+          "timestamp": 1789579710.0,
+          "price": 1.3029,
+          "regime": "BEARISH_TREND",
+          "market_state": "BEARISH_CONTEXT",
+          "direction": "WAIT",
+          "feature_vector": {
+            "market.multi_timeframe_bias": -0.5341981487490115,
+            "market.alignment_score": 0.9456721489691419,
+            "market.conflict_score": 0.0,
+            "market.directional_conviction": 0.5211383218982231,
+            "market.compression_pressure": 0.6051445836109571,
+            "market.expansion_potential": 0.21186511301901573,
+            "market.rejection_pressure": 0.5493301886792771,
+            "market.noise_score": 0.4052963125905391,
+            "market.market_quality": 0.5523245985071669,
+            "regime.directional_bias": -0.23833306602942314,
+            "regime.regime_confidence": 0.6259572268883808,
+            "regime.trend_strength": 0.5481031568928589,
+            "regime.compression_strength": 0.3933439793471222,
+            "regime.expansion_strength": 0.11652581216045865,
+            "regime.range_strength": 0.453873723967054,
+            "regime.noise_strength": 0.30317778755432345,
+            "regime.transition_strength": 0.3903793686214282,
+            "debate.weighted_score": -0.14592359787104725,
+            "debate.consensus_confidence": 0.12186409978538984,
+            "debate.disagreement_score": 0.20294351074761482,
+            "debate.uncertainty_score": 0.31103452536649623,
+            "debate.bullish_weight": 0.0,
+            "debate.bearish_weight": 0.2627493684146241,
+            "debate.wait_weight": 0.7372506315853757
+          },
+          "tags": [
+            "1m:rejection",
+            "5m:fake_break",
+            "5m:rejection",
+            "fake_break",
+            "fake_break:bullish",
+            "rejection",
+            "rejection:bullish"
+          ],
+          "confidence": 0.0,
+          "uncertainty": 0.75,
+          "outcome": "CORRECT_WAIT",
+          "outcome_score": 1.0,
+          "outcome_timestamp": 1789579740.0,
+          "notes": [
+            "final advisory action: wait",
+            "calibrated confidence=0.00",
+            "required confidence=0.72",
+            "combined risk score=0.36",
+            "risk components data=0.00 market=0.39 model=0.78 behavioral=0.00",
+            "agent veto remains active",
+            "scenario failure probability=1.00",
+            "blocked: upstream decision is WAIT",
+            "analytical expiry evaluation at 1.30286000; no real order was executed"
+          ]
+        },
+        "similarity": 0.9913988863458657,
+        "recency_score": 0.9999503980556139,
+        "outcome_quality": 1.0,
+        "composite_score": 0.9965421938578112
+      }
+    ],
+    "evidence_quality": 0.4874864009945926,
+    "simulation_allowed": false,
+    "reasons": [
+      "world state leans bearish",
+      "1 similar historical cases were available",
+      "largest world-model prior: range (0.25)",
+      "evidence quality=0.49",
+      "agent veto is active",
+      "scenario simulation is restricted until evidence improves"
+    ]
+  },
+  "last_simulation": {
+    "timestamp": 1789579740.0,
+    "asset": "GBPUSD_otc",
+    "price": 1.30327,
+    "scenarios_run": 0,
+    "horizon_candles": 4,
+    "bullish_probability": 0.0,
+    "bearish_probability": 0.0,
+    "sideways_probability": 0.0,
+    "failure_probability": 1.0,
+    "expected_directional_score": 0.0,
+    "expected_move_atr": 0.0,
+    "simulation_confidence": 0.0,
+    "scenario_disagreement": 1.0,
+    "dominant_scenario": "FAILURE",
+    "dominant_direction": "WAIT",
+    "usable_for_fusion": false,
+    "scenarios": [],
+    "reasons": [
+      "world model did not allow scenario simulation"
+    ]
+  },
+  "last_final_advisory": {
+    "timestamp": 1789579740.0,
+    "asset": "GBPUSD_otc",
+    "price": 1.30327,
+    "advisory_action": "WAIT",
+    "direction": "WAIT",
+    "calibrated_confidence": 0.0,
+    "required_confidence": 0.7207202133264035,
+    "risk_score": 0.4072021332640339,
+    "uncertainty": 0.75,
+    "data_risk": 0.0036225318908691406,
+    "market_risk": 0.3955403087445959,
+    "model_risk": 0.7769772004842931,
+    "behavioral_risk": 0.3333333333333333,
+    "signal_strength": "NONE",
+    "blocked": true,
+    "block_reasons": [
+      "upstream decision is WAIT",
+      "calibrated decision is not ready for final risk review",
+      "multi-agent safety veto is active",
+      "market readiness blocks directional advice: warmup",
+      "decision uncertainty exceeds allowed threshold",
+      "calibrated confidence is below the required threshold",
+      "scenario failure probability is too high",
+      "future scenarios disagree too strongly"
+    ],
+    "reasons": [
+      "final advisory action: wait",
+      "calibrated confidence=0.00",
+      "required confidence=0.72",
+      "combined risk score=0.41",
+      "risk components data=0.00 market=0.40 model=0.78 behavioral=0.33",
+      "agent veto remains active",
+      "scenario failure probability=1.00",
+      "blocked: upstream decision is WAIT",
+      "blocked: calibrated decision is not ready for final risk review",
+      "blocked: multi-agent safety veto is active",
+      "blocked: market readiness blocks directional advice: warmup",
+      "blocked: decision uncertainty exceeds allowed threshold",
+      "blocked: calibrated confidence is below the required threshold",
+      "blocked: scenario failure probability is too high",
+      "blocked: future scenarios disagree too strongly",
+      "recommendation is advisory only; the human user makes the final decision"
+    ],
+    "evidence": {
+      "market_readiness": "WARMUP",
+      "market_quality": 0.604587,
+      "market_noise": 0.452307,
+      "market_conflict": 0.0,
+      "regime": "BEARISH_TREND",
+      "regime_confidence": 0.657028,
+      "regime_transition_strength": 0.387677,
+      "agent_consensus": "WAIT",
+      "agent_disagreement": 0.197386,
+      "agent_veto": true,
+      "calibration_method": "wait_passthrough",
+      "historical_sample_size": 0,
+      "effective_sample_size": 0.0,
+      "defensive_mode": false,
+      "consecutive_bad_outcomes": 1,
+      "data_stale": false,
+      "simulation_usable": false,
+      "simulation_confidence": 0.0,
+      "simulation_failure_probability": 1.0,
+      "simulation_disagreement": 1.0
+    }
+  }
+}

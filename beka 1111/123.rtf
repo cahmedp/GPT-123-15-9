@@ -1,0 +1,1443 @@
+{\rtf1\ansi\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil Calibri;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 import asyncio\par
+import json\par
+import logging\par
+import time\par
+from intelligence.otc_behavior_engine import OTCBehaviorEngine\par
+from communication.voice_alert import VoiceAlert\par
+from dataclasses import asdict, dataclass, is_dataclass\par
+from logging.handlers import RotatingFileHandler\par
+from pathlib import Path\par
+from typing import Any, Mapping, Optional\par
+from debug_tick_recorder import TickRecorder\par
+from agents.analyst_coordinator import AnalystCoordinator\par
+from config import CONFIG\par
+from core.session_manager import SessionManager\par
+from data.candle_builder import CandleBuilder\par
+from data.data_manager import DataManager\par
+from data.pocket_connector import HistoricalCandle, MarketTick, PocketConnector\par
+from decision.confidence_engine import ConfidenceEngine\par
+from decision.decision_fusion import DecisionFusionEngine\par
+from decision.explanation_engine import ExplanationEngine\par
+from intelligence.market_intelligence import MarketIntelligenceEngine\par
+from intelligence.pattern_engine import PatternEngine, PatternSnapshot\par
+from intelligence.regime_detector import RegimeDetector\par
+from learning.continuous_learning import ContinuousLearningEngine\par
+from learning.goal_manager import GoalManager\par
+from memory.knowledge_base import KnowledgeBase\par
+from memory.memory_manager import MemoryManager\par
+from memory.trade_journal import TradeJournal\par
+from risk.risk_manager import FinalRiskDecision, RiskManager\par
+from simulation.scenario_engine import ScenarioEngine\par
+from simulation.world_model import WorldModel\par
+from ui.terminal_dashboard import TerminalDashboard\par
+\par
+\par
+@dataclass(slots=True)\par
+class _PendingEvaluation:\par
+    case_id: str\par
+    journal_id: str\par
+    action: str\par
+    entry_timestamp: float\par
+    due_timestamp: float\par
+    entry_price: float\par
+    atr: float\par
+\par
+\par
+class Analyst:\par
+    """\par
+    Main runtime orchestrator for the Personal AI Trading Analyst.\par
+\par
+    Pipeline:\par
+        Pocket Option read-only feed\par
+            -> CandleBuilder (30s / 1m / 5m)\par
+            -> Market Intelligence\par
+            -> Pattern Engine\par
+            -> Regime Detector\par
+            -> Multi-Agent Debate\par
+            -> Memory / Knowledge\par
+            -> World Model\par
+            -> Scenario Simulation\par
+            -> Decision Fusion\par
+            -> Confidence Calibration\par
+            -> Final Risk Gate\par
+            -> Terminal Dashboard\par
+            -> Outcome Feedback / Continuous Learning\par
+\par
+    The system is CONSULTANT-ONLY. It never submits Pocket Option orders.\par
+    """\par
+\par
+    def __init__(self) -> None:\par
+        if bool(CONFIG.EXECUTION_ENABLED):\par
+            raise RuntimeError(\par
+                "EXECUTION_ENABLED must remain False. This project is advisory only."\par
+            )\par
+\par
+        self.session = SessionManager()\par
+        self.connector = PocketConnector()\par
+        self.data = DataManager()\par
+        self.candle_builder = CandleBuilder()\par
+\par
+        self.market_engine = MarketIntelligenceEngine()\par
+        self.pattern_engine = PatternEngine()\par
+        self.otc_behavior_engine = OTCBehaviorEngine()\par
+        self.regime_detector = RegimeDetector()\par
+        self.coordinator = AnalystCoordinator()\par
+\par
+        self.memory = MemoryManager()\par
+        self.knowledge = KnowledgeBase()\par
+        self.journal = TradeJournal(\par
+            str(CONFIG.JOURNAL_DIR / "trades.jsonl")\par
+        )\par
+\par
+        self.learning = ContinuousLearningEngine(\par
+            memory=self.memory,\par
+            knowledge=self.knowledge,\par
+            journal=self.journal,\par
+        )\par
+        self.goals = GoalManager(\par
+            memory=self.memory,\par
+            knowledge=self.knowledge,\par
+            journal=self.journal,\par
+        )\par
+\par
+        self.world_model = WorldModel(memory=self.memory)\par
+        self.scenario_engine = ScenarioEngine()\par
+        self.decision_fusion = DecisionFusionEngine()\par
+        self.confidence_engine = ConfidenceEngine(memory=self.memory)\par
+        self.risk_manager = RiskManager()\par
+        self.explanation_engine = ExplanationEngine()\par
+        self._last_explanation = None\par
+\par
+        self.dashboard = TerminalDashboard()\par
+        self.logger = self._build_logger()\par
+        self.tick_recorder = TickRecorder()\par
+        self.voice_alert = VoiceAlert()\par
+        self._pending: list[_PendingEvaluation] = []\par
+        self._last_recorded_market_timestamp: Optional[float] = None\par
+        self._last_ui_refresh = 0.0\par
+\par
+        summary = self.memory.summary()\par
+        self._last_learning_resolved = int(summary.resolved_cases)\par
+        self._last_goal_review_resolved = int(summary.resolved_cases)\par
+\par
+        self._last_market = None\par
+        self._last_regime = None\par
+        self._last_debate = None\par
+        self._last_world = None\par
+        self._last_simulation = None\par
+        self._last_final: Optional[FinalRiskDecision] = None\par
+\par
+    def start(self) -> None:\par
+        """Synchronous entry point used by main.py."""\par
+        try:\par
+            asyncio.run(self._run())\par
+        except KeyboardInterrupt:\par
+            self.session.request_stop("keyboard_interrupt")\par
+\par
+    async def _run(self) -> None:\par
+        self.session.start()\par
+        self.dashboard.start()\par
+\par
+        fatal_error: Optional[str] = None\par
+        stream = None\par
+\par
+        try:\par
+            await self.connector.connect()\par
+            seeded = await self._bootstrap_history()\par
+            stream = self.connector.stream_ticks()\par
+\par
+            if seeded:\par
+                stream = await self._wait_for_5m_confirmation_candles(stream)\par
+                self.logger.info("STREAM AFTER WARMUP TYPE=%s", type(stream))\par
+                await self._analyze_current(\par
+                    record_advisory=False,\par
+                    decision_timestamp=None,\par
+                )\par
+\par
+            pending_tick_task = None\par
+\par
+            while not self.session.should_stop():\par
+                try:\par
+                    if pending_tick_task is None:\par
+                        pending_tick_task = asyncio.create_task(\par
+                            anext(stream)\par
+                        )\par
+\par
+                    tick = await asyncio.wait_for(\par
+                        asyncio.shield(pending_tick_task),\par
+                        timeout=max(float(CONFIG.UI_REFRESH_SECONDS), 0.5),\par
+                    )\par
+\par
+                    self.logger.info("LIVE TICK RECEIVED %s", tick.timestamp)\par
+\par
+                    pending_tick_task = None\par
+\par
+                except asyncio.TimeoutError:\par
+                    self._heartbeat()\par
+                    continue\par
+\par
+                except StopAsyncIteration:\par
+                    # Async streams can terminate during reconnects or provider\par
+                    # lifecycle transitions. Do not kill the analyst runtime.\par
+                    # Recreate the consumer and continue the analysis loop.\par
+                    self.logger.warning(\par
+                        "Tick stream ended. Recreating consumer stream."\par
+                    )\par
+\par
+                    if pending_tick_task is not None:\par
+                        pending_tick_task.cancel()\par
+                        try:\par
+                            await pending_tick_task\par
+                        except BaseException:\par
+                            pass\par
+                        pending_tick_task = None\par
+\par
+                    try:\par
+                        await stream.aclose()\par
+                    except Exception:\par
+                        pass\par
+\par
+                    await asyncio.sleep(1.0)\par
+                    stream = self.connector.stream_ticks()\par
+                    continue\par
+\par
+                closed_by_timeframe = self._ingest_live_tick(tick)\par
+\par
+                if closed_by_timeframe.get(CONFIG.BASE_TIMEFRAME_SECONDS, []):\par
+                    await self._analyze_current(\par
+                        record_advisory=True,\par
+                        decision_timestamp=tick.timestamp,\par
+                    )\par
+                else:\par
+                    self._heartbeat()\par
+\par
+        except Exception as exc:\par
+            fatal_error = f"\{type(exc).__name__\}: \{exc\}"\par
+            self.logger.exception("Fatal analyst error: %s", exc)\par
+            self.session.request_stop("fatal_error")\par
+\par
+        finally:\par
+            if stream is not None:\par
+                try:\par
+                    await stream.aclose()\par
+                except Exception:\par
+                    pass\par
+\par
+            await self.connector.close()\par
+\par
+            self._write_session_report(\par
+                fatal_error=fatal_error\par
+            )\par
+\par
+\par
+    async def _wait_for_5m_confirmation_candles(\par
+        self,\par
+        stream: Any,\par
+    ) -> Any:\par
+\par
+        initial_5m_count = len(\par
+            self._candles(CONFIG.TIMEFRAME_5M_SECONDS)\par
+        )\par
+\par
+        target = initial_5m_count + 2\par
+\par
+        self.logger.info(\par
+            "Waiting for two live closed 5m confirmation candles: current=%s target=%s",\par
+            initial_5m_count,\par
+            target,\par
+        )\par
+\par
+        while len(self._candles(CONFIG.TIMEFRAME_5M_SECONDS)) < target:\par
+            try:\par
+                tick = await anext(stream)\par
+\par
+            except StopAsyncIteration:\par
+                # A provider stream may terminate during warmup. Warmup must\par
+                # not kill the whole analyst lifecycle because the main loop\par
+                # already owns stream recovery semantics.\par
+                self.logger.warning(\par
+                    "Warmup stream ended. Recreating consumer stream."\par
+                )\par
+\par
+                try:\par
+                    await stream.aclose()\par
+                except Exception:\par
+                    pass\par
+\par
+                await asyncio.sleep(\par
+                    max(\par
+                        0.25,\par
+                        float(CONFIG.STREAM_RECONNECT_DELAY_SECONDS),\par
+                    )\par
+                )\par
+\par
+                stream = self.connector.stream_ticks()\par
+                continue\par
+\par
+            self._ingest_live_tick(tick)\par
+            self._heartbeat()\par
+\par
+        self.logger.info(\par
+            "Two live 5m confirmation candles received. Analysis unlocked."\par
+        )\par
+\par
+        return stream\par
+\par
+\par
+    def _ingest_live_tick(\par
+        self,\par
+        tick: MarketTick,\par
+    ) -> dict[int, list[HistoricalCandle]]:\par
+        """\par
+        Push one live tick through the runtime data pipeline.\par
+\par
+        This single helper keeps bootstrap warmup and the main live loop using\par
+        exactly the same ingestion path, which avoids state drift and removes\par
+        duplicated tick-handling logic.\par
+        """\par
+\par
+        # Raw tick capture for debugging the complete ingestion pipeline.\par
+        if hasattr(self, "tick_recorder") and self.tick_recorder:\par
+            try:\par
+                self.tick_recorder.record(tick)\par
+            except Exception as exc:\par
+                self.logger.warning(\par
+                    "Tick recorder failed: %s",\par
+                    exc,\par
+                )\par
+\par
+        self.data.add_tick(tick)\par
+        self._resolve_pending(tick)\par
+\par
+        closed_by_timeframe = self.candle_builder.add_tick(tick)\par
+\par
+        if any(closed_by_timeframe.values()):\par
+            self.logger.info(\par
+                "CANDLE CLOSED %s",\par
+                \{\par
+                    tf: len(candles)\par
+                    for tf, candles in closed_by_timeframe.items()\par
+                \},\par
+            )\par
+\par
+        for candles in closed_by_timeframe.values():\par
+            self.data.add_candles(candles)\par
+\par
+        return closed_by_timeframe\par
+\par
+    async def _bootstrap_history(self) -> int:\par
+        """\par
+        Hybrid historical bootstrap.\par
+\par
+        Strategy:\par
+        1) Try to load enough closed 30s candles.\par
+        2) Fallback gracefully if provider returns less data.\par
+        3) Build 1m and 5m context from available history.\par
+        4) Keep system in WARMUP until enough market context exists.\par
+        """\par
+\par
+        bootstrap_sizes = (\par
+            240,\par
+            220,\par
+            200,\par
+            120,\par
+        )\par
+\par
+        history: list[HistoricalCandle] = []\par
+\par
+        for requested_count in bootstrap_sizes:\par
+            try:\par
+                self.logger.info(\par
+                    "Requesting historical candles: %s",\par
+                    requested_count,\par
+                )\par
+\par
+                history = await self.connector.fetch_historical_candles(\par
+                    timeframe_seconds=CONFIG.BASE_TIMEFRAME_SECONDS,\par
+                    count=requested_count,\par
+                )\par
+\par
+                if history:\par
+                    self.logger.info(\par
+                        "Bootstrap received %s candles",\par
+                        len(history),\par
+                    )\par
+                    break\par
+\par
+            except Exception as exc:\par
+                self.logger.warning(\par
+                    "Historical request %s failed: %s",\par
+                    requested_count,\par
+                    exc,\par
+                )\par
+\par
+\par
+        if not history:\par
+            self.dashboard.show_warning(\par
+                "Historical bootstrap unavailable. Waiting for live candles."\par
+            )\par
+            return 0\par
+\par
+\par
+        history = self._deduplicate_candles(history)\par
+\par
+        history = await self._closed_history_only(history)\par
+\par
+\par
+        if not history:\par
+            self.dashboard.show_warning(\par
+                "No closed historical candles available."\par
+            )\par
+            return 0\par
+\par
+\par
+        emitted = self.candle_builder.seed_base_candles(\par
+            history\par
+        )\par
+\par
+\par
+        stored = 0\par
+\par
+        for candles in emitted.values():\par
+            self.data.add_candles(candles)\par
+            stored += len(candles)\par
+\par
+\par
+        counts = \{\par
+            timeframe: len(self._candles(timeframe))\par
+            for timeframe in self.candle_builder.timeframes\par
+        \}\par
+\par
+\par
+        self.logger.info(\par
+            "Hybrid bootstrap complete: base=%s stored=%s counts=%s",\par
+            len(history),\par
+            stored,\par
+            counts,\par
+        )\par
+\par
+\par
+        self.dashboard.update(\par
+            session=self.session.snapshot(),\par
+            connector=self._connector_status(),\par
+            memory_summary=self.memory.summary(),\par
+            learning_context=self.learning.runtime_context(),\par
+            goal_context=self.goals.runtime_context(),\par
+\par
+            status_message=(\par
+                "Bootstrap loaded | "\par
+                f"30s=\{counts.get(CONFIG.BASE_TIMEFRAME_SECONDS,0)\} "\par
+                f"1m=\{counts.get(CONFIG.TIMEFRAME_1M_SECONDS,0)\} "\par
+                f"5m=\{counts.get(CONFIG.TIMEFRAME_5M_SECONDS,0)\}"\par
+            ),\par
+        )\par
+\par
+\par
+        return len(history)\par
+\par
+\par
+    async def _closed_history_only(\par
+        self,\par
+        candles: list[HistoricalCandle],\par
+    ) -> list[HistoricalCandle]:\par
+        if not candles:\par
+            return []\par
+\par
+        server_now = await self.connector.server_time()\par
+\par
+        if server_now is None:\par
+            now = time.time()\par
+        else:\par
+            now = self._normalize_timestamp(float(server_now))\par
+\par
+        timeframe = float(CONFIG.BASE_TIMEFRAME_SECONDS)\par
+\par
+        closed = [\par
+            candle\par
+            for candle in candles\par
+            if (\par
+                candle.timestamp\par
+                + timeframe\par
+                <= now + 1.0\par
+            )\par
+        ]\par
+\par
+        # Some unofficial endpoints do not expose a reliable server clock.\par
+        # In that rare case, keeping all except the latest row is safer than\par
+        # treating a potentially forming candle as closed.\par
+        if not closed and len(candles) > 1:\par
+            return candles[:-1]\par
+\par
+        return closed\par
+\par
+    async def _analyze_current(\par
+        self,\par
+        *,\par
+        record_advisory: bool,\par
+        decision_timestamp: Optional[float],\par
+    ) -> Optional[FinalRiskDecision]:\par
+        candles_by_timeframe = \{\par
+            CONFIG.BASE_TIMEFRAME_SECONDS: self._candles(\par
+                CONFIG.BASE_TIMEFRAME_SECONDS\par
+            ),\par
+            CONFIG.TIMEFRAME_1M_SECONDS: self._candles(\par
+                CONFIG.TIMEFRAME_1M_SECONDS\par
+            ),\par
+            CONFIG.TIMEFRAME_5M_SECONDS: self._candles(\par
+                CONFIG.TIMEFRAME_5M_SECONDS\par
+            ),\par
+        \}\par
+\par
+        # OTC behavior observation layer.\par
+        # Telemetry only. It does not modify decisions.\par
+        try:\par
+            # OTC behavior must use micro movement data, not only closed candles.\par
+            # Candles hide tick-level transitions and can make OTC appear flat.\par
+            recent_prices = []\par
+\par
+            try:\par
+                recent_ticks = list(\par
+                    self.data.latest_ticks()\par
+                )[-120:]\par
+\par
+                recent_prices = [\par
+                    float(tick.price)\par
+                    for tick in recent_ticks\par
+                ]\par
+\par
+            except Exception:\par
+                recent_prices = []\par
+\par
+            # Safe fallback when tick history is unavailable.\par
+            if len(recent_prices) < 10:\par
+                recent_prices = [\par
+                    float(candle.close)\par
+                    for candle in candles_by_timeframe[\par
+                        CONFIG.BASE_TIMEFRAME_SECONDS\par
+                    ][-120:]\par
+                ]\par
+\par
+            otc_profile = self.otc_behavior_engine.analyze(\par
+                recent_prices\par
+            )\par
+\par
+            self.logger.info(\par
+                "OTC PROFILE GENERATED: %s",\par
+                otc_profile.as_dict(),\par
+            )\par
+\par
+        except Exception as exc:\par
+            self.logger.warning(\par
+                "OTC PROFILE FAILED: %s",\par
+                exc,\par
+            )\par
+\par
+        if any(\par
+            not candles\par
+            for candles in candles_by_timeframe.values()\par
+        ):\par
+            self._render_latest(\par
+                status_message="Waiting for all 30s / 1m / 5m closed candle streams..."\par
+            )\par
+            return None\par
+\par
+        market = self.market_engine.analyze(\par
+            candles_by_timeframe\par
+        )\par
+\par
+        timeframe_intelligence = \{\par
+            CONFIG.BASE_TIMEFRAME_SECONDS: market.base_30s,\par
+            CONFIG.TIMEFRAME_1M_SECONDS: market.setup_1m,\par
+            CONFIG.TIMEFRAME_5M_SECONDS: market.context_5m,\par
+        \}\par
+\par
+        patterns: dict[int, PatternSnapshot] = \{\}\par
+\par
+        for timeframe, candles in candles_by_timeframe.items():\par
+            intel = timeframe_intelligence[timeframe]\par
+            patterns[timeframe] = self.pattern_engine.analyze(\par
+                candles=candles,\par
+                technical=intel.technical,\par
+                structure=intel.structure,\par
+            )\par
+\par
+        regime = self.regime_detector.detect(\par
+            market=market,\par
+            patterns_by_timeframe=patterns,\par
+        )\par
+\par
+        runtime_context = self._runtime_context()\par
+\par
+        debate = self.coordinator.evaluate(\par
+            market=market,\par
+            regime=regime,\par
+            patterns_by_timeframe=patterns,\par
+            session_context=runtime_context,\par
+        )\par
+\par
+        feature_vector = self._memory_feature_vector(\par
+            market=market,\par
+            regime=regime,\par
+            debate=debate,\par
+        )\par
+\par
+        world = self.world_model.build(\par
+            market=market,\par
+            regime=regime,\par
+            debate=debate,\par
+            memory_feature_vector=feature_vector,\par
+        )\par
+\par
+        simulation = self.scenario_engine.simulate(world)\par
+\par
+        memory_summary_for_fusion = self.memory.summarize_similar(\par
+            world.similar_cases\par
+        )\par
+\par
+        tags = self._pattern_tags(patterns)\par
+\par
+        knowledge_support = self.knowledge.directional_support(\par
+            regime=regime.primary_regime,\par
+            tags=tags,\par
+        )\par
+\par
+        if int(knowledge_support.get("count", 0) or 0) == 0:\par
+            knowledge_support = self.knowledge.directional_support(\par
+                regime=regime.primary_regime,\par
+            )\par
+\par
+        fusion = self.decision_fusion.fuse(\par
+            market=market,\par
+            regime=regime,\par
+            debate=debate,\par
+            world=world,\par
+            simulation=simulation,\par
+            memory_summary=memory_summary_for_fusion,\par
+            knowledge_support=knowledge_support,\par
+        )\par
+\par
+        calibrated = self.confidence_engine.calibrate(\par
+            decision=fusion,\par
+            regime=regime,\par
+        )\par
+\par
+        final = self.risk_manager.review(\par
+            decision=calibrated,\par
+            market=market,\par
+            regime=regime,\par
+            debate=debate,\par
+            simulation=simulation,\par
+            session_context=runtime_context,\par
+        )\par
+\par
+        # Decision Trace is observability only.\par
+        # It records the decision path without changing any decision logic.\par
+        self._write_decision_trace(\par
+            market=market,\par
+            regime=regime,\par
+            debate=debate,\par
+            world=world,\par
+            simulation=simulation,\par
+            fusion=fusion,\par
+            calibrated=calibrated,\par
+            final=final,\par
+        )\par
+\par
+        self._last_explanation = self.explanation_engine.explain(\par
+            fusion_decision=fusion,\par
+            calibrated_decision=calibrated,\par
+            risk_result=final,\par
+            \par
+        )\par
+\par
+        self.logger.info(\par
+            "EXPLANATION GENERATED: %s",\par
+            self._last_explanation.as_dict(),\par
+        )\par
+\par
+        self._last_market = market\par
+        self._last_regime = regime\par
+        self._last_debate = debate\par
+        self._last_world = world\par
+        self._last_simulation = simulation\par
+        self._last_final = final\par
+\par
+        self.voice_alert.check(\par
+            final.advisory_action\par
+        )\par
+        \par
+\par
+        self.dashboard.update(\par
+            session=self.session.snapshot(),\par
+            connector=self._connector_status(),\par
+            market=market,\par
+            regime=regime,\par
+            debate=debate,\par
+            world=world,\par
+            simulation=simulation,\par
+            final_decision=final,\par
+            memory_summary=self.memory.summary(),\par
+            learning_context=self.learning.runtime_context(),\par
+            goal_context=self.goals.runtime_context(),\par
+            status_message=self._analysis_status(final),\par
+        )\par
+\par
+        if record_advisory:\par
+            self._record_advisory(\par
+                decision_timestamp=(\par
+                    float(decision_timestamp)\par
+                    if decision_timestamp is not None\par
+                    else time.time()\par
+                ),\par
+                market=market,\par
+                regime=regime,\par
+                debate=debate,\par
+                patterns=patterns,\par
+                final=final,\par
+                feature_vector=feature_vector,\par
+            )\par
+\par
+        return final\par
+\par
+    def _write_decision_trace(\par
+        self,\par
+        *,\par
+        market: Any,\par
+        regime: Any,\par
+        debate: Any,\par
+        world: Any,\par
+        simulation: Any,\par
+        fusion: Any,\par
+        calibrated: Any,\par
+        final: FinalRiskDecision,\par
+    ) -> None:\par
+        """Write decision path visibility without affecting execution logic."""\par
+        try:\par
+            trace = \{\par
+                "analysis_start": True,\par
+                "market_state": "OK",\par
+                "regime": getattr(regime, "primary_regime", None),\par
+                "agents": "OK",\par
+                "world_model": "OK",\par
+                "simulation": "OK",\par
+                "fusion": "OK",\par
+                "calibrated_confidence": getattr(\par
+                    calibrated, "calibrated_confidence", None\par
+                ),\par
+                "risk_review": "OK",\par
+                "final_decision": getattr(final, "advisory_action", None),\par
+                "blocked": getattr(final, "blocked", None),\par
+                "block_reasons": list(getattr(final, "block_reasons", []) or []),\par
+            \}\par
+\par
+            self.logger.info(\par
+                "DECISION TRACE %s",\par
+                json.dumps(trace, ensure_ascii=False),\par
+            )\par
+        except Exception as exc:\par
+            # Trace must never affect the analyst pipeline.\par
+            self.logger.warning("Decision trace failed: %s", exc)\par
+\par
+    def _record_advisory(\par
+        self,\par
+        *,\par
+        decision_timestamp: float,\par
+        market: Any,\par
+        regime: Any,\par
+        debate: Any,\par
+        patterns: Mapping[int, PatternSnapshot],\par
+        final: FinalRiskDecision,\par
+        feature_vector: Mapping[str, float],\par
+    ) -> None:\par
+        # One memory/journal record per newly closed base candle.\par
+        if (\par
+            self._last_recorded_market_timestamp is not None\par
+            and market.timestamp\par
+            <= self._last_recorded_market_timestamp\par
+        ):\par
+            return\par
+\par
+        self._last_recorded_market_timestamp = float(\par
+            market.timestamp\par
+        )\par
+\par
+        tags = self._pattern_tags(patterns)\par
+\par
+        case = self.memory.add_case(\par
+            asset=market.asset,\par
+            timeframe_seconds=CONFIG.BASE_TIMEFRAME_SECONDS,\par
+            timestamp=float(decision_timestamp),\par
+            price=float(market.price),\par
+            regime=regime.primary_regime,\par
+            market_state=market.context_state,\par
+            direction=final.direction,\par
+            feature_vector=feature_vector,\par
+            tags=tags,\par
+            confidence=final.calibrated_confidence,\par
+            uncertainty=final.uncertainty,\par
+            notes=tuple(final.reasons[:8]),\par
+        )\par
+\par
+        expiry_seconds = int(\par
+            CONFIG.BASE_TIMEFRAME_SECONDS\par
+        )\par
+\par
+        journal_entry = self.journal.create(\par
+            asset=market.asset,\par
+            direction=final.advisory_action,\par
+            confidence=final.calibrated_confidence,\par
+            price=market.price,\par
+            expiry_seconds=expiry_seconds,\par
+            analysis=\{\par
+                "execution": False,\par
+                "kind": "advisory_evaluation",\par
+                "market_timestamp": market.timestamp,\par
+                "regime": regime.primary_regime,\par
+                "risk_score": final.risk_score,\par
+                "uncertainty": final.uncertainty,\par
+                "signal_strength": final.signal_strength,\par
+                "blocked": final.blocked,\par
+                "agent_consensus": debate.consensus_direction,\par
+                "tags": list(tags),\par
+            \},\par
+        )\par
+\par
+        atr = max(\par
+            float(market.base_30s.technical.atr),\par
+            0.0,\par
+        )\par
+\par
+        self._pending.append(\par
+            _PendingEvaluation(\par
+                case_id=case.case_id,\par
+                journal_id=journal_entry.id,\par
+                action=final.advisory_action,\par
+                entry_timestamp=float(decision_timestamp),\par
+                due_timestamp=(\par
+                    float(decision_timestamp)\par
+                    + expiry_seconds\par
+                ),\par
+                entry_price=float(market.price),\par
+                atr=atr,\par
+            )\par
+        )\par
+\par
+    def _resolve_pending(\par
+        self,\par
+        tick: MarketTick,\par
+    ) -> None:\par
+        if not self._pending:\par
+            return\par
+\par
+        remaining: list[_PendingEvaluation] = []\par
+        resolved_now = 0\par
+\par
+        for pending in self._pending:\par
+            if tick.timestamp < pending.due_timestamp:\par
+                remaining.append(pending)\par
+                continue\par
+\par
+            result, score = self._score_outcome(\par
+                pending=pending,\par
+                exit_price=tick.price,\par
+            )\par
+\par
+            try:\par
+                self.memory.update_outcome(\par
+                    pending.case_id,\par
+                    outcome=result,\par
+                    outcome_score=score,\par
+                    outcome_timestamp=tick.timestamp,\par
+                    note=(\par
+                        f"analytical expiry evaluation at \{tick.price:.8f\}; "\par
+                        "no real order was executed"\par
+                    ),\par
+                )\par
+            except Exception as exc:\par
+                self.logger.warning(\par
+                    "Memory outcome update failed for %s: %s",\par
+                    pending.case_id,\par
+                    exc,\par
+                )\par
+\par
+            try:\par
+                self.journal.close(\par
+                    pending.journal_id,\par
+                    result=result,\par
+                    pnl=score,\par
+                )\par
+            except Exception as exc:\par
+                self.logger.warning(\par
+                    "Journal outcome update failed for %s: %s",\par
+                    pending.journal_id,\par
+                    exc,\par
+                )\par
+\par
+            resolved_now += 1\par
+\par
+        self._pending = remaining\par
+\par
+        if resolved_now:\par
+            self._refresh_learning_if_due()\par
+\par
+    def _score_outcome(\par
+        self,\par
+        *,\par
+        pending: _PendingEvaluation,\par
+        exit_price: float,\par
+    ) -> tuple[str, float]:\par
+        move = float(exit_price) - pending.entry_price\par
+\par
+        if pending.action == "BUY":\par
+            if move > 0:\par
+                return "CORRECT", 1.0\par
+            if move < 0:\par
+                return "WRONG", -1.0\par
+            return "NEUTRAL", 0.0\par
+\par
+        if pending.action == "SELL":\par
+            if move < 0:\par
+                return "CORRECT", 1.0\par
+            if move > 0:\par
+                return "WRONG", -1.0\par
+            return "NEUTRAL", 0.0\par
+\par
+        # WAIT quality is evaluated as an analytical abstention. A very small\par
+        # move relative to the entry ATR means waiting was reasonable; a large\par
+        # directional move means the system likely missed a useful setup.\par
+        quiet_threshold = max(\par
+            pending.atr * 0.35,\par
+            pending.entry_price * 1e-6,\par
+        )\par
+\par
+        if abs(move) <= quiet_threshold:\par
+            return "CORRECT_WAIT", 1.0\par
+\par
+        return "MISSED_MOVE", -1.0\par
+\par
+    def _refresh_learning_if_due(\par
+        self,\par
+        *,\par
+        force_if_empty: bool = False,\par
+    ) -> None:\par
+        summary = self.memory.summary()\par
+        resolved = int(summary.resolved_cases)\par
+\par
+        learning_interval = max(\par
+            int(CONFIG.LEARNING_MIN_NEW_CASES),\par
+            1,\par
+        )\par
+\par
+        knowledge_empty = (\par
+            self.knowledge.summary().get(\par
+                "total_items",\par
+                0,\par
+            )\par
+            == 0\par
+        )\par
+\par
+        should_learn = (\par
+            resolved\par
+            - self._last_learning_resolved\par
+            >= learning_interval\par
+        )\par
+\par
+        if (\par
+            force_if_empty\par
+            and knowledge_empty\par
+            and resolved >= learning_interval\par
+        ):\par
+            should_learn = True\par
+\par
+        if should_learn:\par
+            try:\par
+                report = self.learning.learn(\par
+                    asset=CONFIG.PAIR\par
+                )\par
+                self.logger.info(\par
+                    "Learning pass: %s",\par
+                    report.as_dict(),\par
+                )\par
+                self._last_learning_resolved = resolved\par
+            except Exception as exc:\par
+                self.logger.exception(\par
+                    "Continuous learning pass failed: %s",\par
+                    exc,\par
+                )\par
+\par
+        goal_interval = max(\par
+            int(CONFIG.GOAL_REVIEW_INTERVAL_CASES),\par
+            1,\par
+        )\par
+\par
+        should_review_goals = (\par
+            resolved\par
+            - self._last_goal_review_resolved\par
+            >= goal_interval\par
+        )\par
+\par
+        if (\par
+            force_if_empty\par
+            and not self.goals.active_goals()\par
+            and resolved >= goal_interval\par
+        ):\par
+            should_review_goals = True\par
+\par
+        if should_review_goals:\par
+            try:\par
+                self.goals.review(\par
+                    asset=CONFIG.PAIR\par
+                )\par
+                self._last_goal_review_resolved = resolved\par
+            except Exception as exc:\par
+                self.logger.exception(\par
+                    "Goal review failed: %s",\par
+                    exc,\par
+                )\par
+\par
+    def _candles(\par
+        self,\par
+        timeframe: int,\par
+    ) -> list[HistoricalCandle]:\par
+        candles = [\par
+            candle\par
+            for candle in self.data.latest_candles()\par
+            if candle.timeframe_seconds == timeframe\par
+        ]\par
+\par
+        candles.sort(\par
+            key=lambda candle: candle.timestamp\par
+        )\par
+\par
+        # Defensive de-duplication protects feature engines that require\par
+        # strictly increasing timestamps.\par
+        unique: dict[\par
+            float,\par
+            HistoricalCandle,\par
+        ] = \{\par
+            float(candle.timestamp): candle\par
+            for candle in candles\par
+        \}\par
+\par
+        return [\par
+            unique[timestamp]\par
+            for timestamp in sorted(unique)\par
+        ]\par
+\par
+    @staticmethod\par
+    def _deduplicate_candles(\par
+        candles: list[HistoricalCandle],\par
+    ) -> list[HistoricalCandle]:\par
+        unique: dict[\par
+            float,\par
+            HistoricalCandle,\par
+        ] = \{\}\par
+\par
+        for candle in candles:\par
+            unique[\par
+                float(candle.timestamp)\par
+            ] = candle\par
+\par
+        return [\par
+            unique[timestamp]\par
+            for timestamp in sorted(unique)\par
+        ]\par
+\par
+    @staticmethod\par
+    def _memory_feature_vector(\par
+        *,\par
+        market: Any,\par
+        regime: Any,\par
+        debate: Any,\par
+    ) -> dict[str, float]:\par
+        # Keep these keys aligned with WorldModel's default feature vector so\par
+        # future similarity searches compare like with like.\par
+        return \{\par
+            "market.multi_timeframe_bias": float(market.multi_timeframe_bias),\par
+            "market.alignment_score": float(market.alignment_score),\par
+            "market.conflict_score": float(market.conflict_score),\par
+            "market.directional_conviction": float(market.directional_conviction),\par
+            "market.compression_pressure": float(market.compression_pressure),\par
+            "market.expansion_potential": float(market.expansion_potential),\par
+            "market.rejection_pressure": float(market.rejection_pressure),\par
+            "market.noise_score": float(market.noise_score),\par
+            "market.market_quality": float(market.market_quality),\par
+            "regime.directional_bias": float(regime.directional_bias),\par
+            "regime.regime_confidence": float(regime.regime_confidence),\par
+            "regime.trend_strength": float(regime.trend_strength),\par
+            "regime.compression_strength": float(regime.compression_strength),\par
+            "regime.expansion_strength": float(regime.expansion_strength),\par
+            "regime.range_strength": float(regime.range_strength),\par
+            "regime.noise_strength": float(regime.noise_strength),\par
+            "regime.transition_strength": float(regime.transition_strength),\par
+            "debate.weighted_score": float(debate.weighted_score),\par
+            "debate.consensus_confidence": float(debate.consensus_confidence),\par
+            "debate.disagreement_score": float(debate.disagreement_score),\par
+            "debate.uncertainty_score": float(debate.uncertainty_score),\par
+            "debate.bullish_weight": float(debate.bullish_weight),\par
+            "debate.bearish_weight": float(debate.bearish_weight),\par
+            "debate.wait_weight": float(debate.wait_weight),\par
+        \}\par
+\par
+    @staticmethod\par
+    def _pattern_tags(\par
+        patterns: Mapping[int, PatternSnapshot],\par
+    ) -> tuple[str, ...]:\par
+        tags: set[str] = set()\par
+\par
+        names = (\par
+            "compression",\par
+            "wick_cluster",\par
+            "rejection",\par
+            "fake_break",\par
+            "breakout",\par
+            "breakout_retest",\par
+            "expansion",\par
+        )\par
+\par
+        labels = \{\par
+            CONFIG.BASE_TIMEFRAME_SECONDS: "30s",\par
+            CONFIG.TIMEFRAME_1M_SECONDS: "1m",\par
+            CONFIG.TIMEFRAME_5M_SECONDS: "5m",\par
+        \}\par
+\par
+        for timeframe, snapshot in patterns.items():\par
+            label = labels.get(\par
+                timeframe,\par
+                f"\{timeframe\}s",\par
+            )\par
+\par
+            for name in names:\par
+                signal = getattr(\par
+                    snapshot,\par
+                    name,\par
+                    None,\par
+                )\par
+\par
+                if signal is None:\par
+                    continue\par
+\par
+                tags.add(name)\par
+                tags.add(f"\{label\}:\{name\}")\par
+                tags.add(\par
+                    f"\{name\}:\{str(signal.direction).lower()\}"\par
+                )\par
+\par
+        return tuple(sorted(tags))\par
+\par
+    def _runtime_context(self) -> dict[str, Any]:\par
+        now = time.time()\par
+        last_message = self.connector.last_message_at\par
+\par
+        if last_message is None:\par
+            seconds_since_last_tick = 0.0\par
+            data_stale = False\par
+            freshness = 0.50\par
+        else:\par
+            seconds_since_last_tick = max(\par
+                now - last_message,\par
+                0.0,\par
+            )\par
+            data_stale = (\par
+                seconds_since_last_tick\par
+                > float(CONFIG.DATA_STALE_AFTER_SECONDS)\par
+            )\par
+            freshness = self._clip01(\par
+                1.0\par
+                - seconds_since_last_tick\par
+                / max(\par
+                    float(CONFIG.DATA_STALE_AFTER_SECONDS) * 2.0,\par
+                    1e-9,\par
+                )\par
+            )\par
+\par
+        reconnect_penalty = min(\par
+            self.connector.reconnect_count / 10.0,\par
+            0.50,\par
+        )\par
+\par
+        data_quality = self._clip01(\par
+            freshness\par
+            * (\par
+                1.0\par
+                - reconnect_penalty\par
+            )\par
+        )\par
+\par
+        context = \{\par
+            "data_stale": data_stale,\par
+            "seconds_since_last_tick": seconds_since_last_tick,\par
+            "reconnect_count": self.connector.reconnect_count,\par
+            "data_quality_score": data_quality,\par
+        \}\par
+\par
+        context.update(\par
+            self.learning.runtime_context()\par
+        )\par
+\par
+        return context\par
+\par
+    def _connector_status(self) -> dict[str, Any]:\par
+        return \{\par
+            "connected": self.connector.connected,\par
+            "asset": self.connector.asset,\par
+            "reconnect_count": self.connector.reconnect_count,\par
+            "last_error": self.connector.last_error,\par
+        \}\par
+\par
+    def _heartbeat(self) -> None:\par
+        now = time.monotonic()\par
+\par
+        if (\par
+            now - self._last_ui_refresh\par
+            < max(\par
+                float(CONFIG.UI_REFRESH_SECONDS),\par
+                0.25,\par
+            )\par
+        ):\par
+            return\par
+\par
+        self._last_ui_refresh = now\par
+\par
+        runtime = self._runtime_context()\par
+\par
+        if runtime["data_stale"]:\par
+            status = (\par
+                "Live data is stale; directional advice is automatically blocked."\par
+            )\par
+        elif not self.connector.connected:\par
+            status = "Pocket Option stream is reconnecting..."\par
+        else:\par
+            status = "Live monitoring active. Waiting for the next closed 30s candle."\par
+\par
+        self._render_latest(\par
+            status_message=status\par
+        )\par
+\par
+    def _render_latest(\par
+        self,\par
+        *,\par
+        status_message: str,\par
+    ) -> None:\par
+        self.dashboard.update(\par
+            session=self.session.snapshot(),\par
+            connector=self._connector_status(),\par
+            market=self._last_market,\par
+            regime=self._last_regime,\par
+            debate=self._last_debate,\par
+            world=self._last_world,\par
+            simulation=self._last_simulation,\par
+            final_decision=self._last_final,\par
+            memory_summary=self.memory.summary(),\par
+            learning_context=self.learning.runtime_context(),\par
+            goal_context=self.goals.runtime_context(),\par
+            status_message=status_message,\par
+        )\par
+\par
+    @staticmethod\par
+    def _analysis_status(\par
+        final: FinalRiskDecision,\par
+    ) -> str:\par
+        if final.advisory_action == "BUY":\par
+            return (\par
+                "Directional advisory: BUY candidate passed the final risk gate. "\par
+                "Human confirmation remains required."\par
+            )\par
+\par
+        if final.advisory_action == "SELL":\par
+            return (\par
+                "Directional advisory: SELL candidate passed the final risk gate. "\par
+                "Human confirmation remains required."\par
+            )\par
+\par
+        if final.block_reasons:\par
+            return (\par
+                "WAIT \f1\emdash  "\par
+                + "; ".join(\par
+                    final.block_reasons[:3]\par
+                )\par
+            )\par
+\par
+        return "WAIT \emdash  evidence is not strong enough for directional advice."\par
+\par
+    def _write_session_report(\par
+        self,\par
+        *,\par
+        fatal_error: Optional[str],\par
+    ) -> Path:\par
+        timestamp = time.strftime(\par
+            "%Y%m%d_%H%M%S",\par
+            time.localtime(),\par
+        )\par
+\par
+        path = CONFIG.REPORT_DIR / (\par
+            f"session_\{timestamp\}.json"\par
+        )\par
+\par
+        session_snapshot = (\par
+            self.session.snapshot()\par
+            if self.session.started\par
+            else None\par
+        )\par
+\par
+        payload = \{\par
+            "app": CONFIG.APP_NAME,\par
+            "version": CONFIG.APP_VERSION,\par
+            "mode": CONFIG.SYSTEM_MODE,\par
+            "execution_enabled": False,\par
+            "asset": self.connector.asset,\par
+            "generated_at": time.time(),\par
+            "fatal_error": fatal_error,\par
+            "session": self._json_safe(\par
+                session_snapshot\par
+            ),\par
+            "connector": self._connector_status(),\par
+            "memory": self._json_safe(\par
+                self.memory.summary()\par
+            ),\par
+            "knowledge": self._json_safe(\par
+                self.knowledge.summary()\par
+            ),\par
+            "journal": self._json_safe(\par
+                self.journal.statistics()\par
+            ),\par
+            "learning": self._json_safe(\par
+                self.learning.last_report\par
+            ),\par
+            "goals": self._json_safe(\par
+                self.goals.active_goals()\par
+            ),\par
+            "pending_analytical_evaluations": len(\par
+                self._pending\par
+            ),\par
+            "last_market": self._json_safe(\par
+                self._last_market\par
+            ),\par
+            "last_regime": self._json_safe(\par
+                self._last_regime\par
+            ),\par
+            "last_debate": self._json_safe(\par
+                self._last_debate\par
+            ),\par
+            "last_world": self._json_safe(\par
+                self._last_world\par
+            ),\par
+            "last_simulation": self._json_safe(\par
+                self._last_simulation\par
+            ),\par
+            "last_final_advisory": self._json_safe(\par
+                self._last_final\par
+            ),\par
+        \}\par
+\par
+        path.write_text(\par
+            json.dumps(\par
+                payload,\par
+                ensure_ascii=False,\par
+                indent=2,\par
+            ),\par
+            encoding="utf-8",\par
+        )\par
+\par
+        return path\par
+\par
+    @staticmethod\par
+    def _json_safe(value: Any) -> Any:\par
+        if value is None:\par
+            return None\par
+\par
+        if is_dataclass(value):\par
+            return Analyst._json_safe(\par
+                asdict(value)\par
+            )\par
+\par
+        if isinstance(value, Mapping):\par
+            return \{\par
+                str(key): Analyst._json_safe(child)\par
+                for key, child in value.items()\par
+            \}\par
+\par
+        if isinstance(value, (list, tuple, set)):\par
+            return [\par
+                Analyst._json_safe(child)\par
+                for child in value\par
+            ]\par
+\par
+        if isinstance(value, Path):\par
+            return str(value)\par
+\par
+        if isinstance(value, (str, int, float, bool)):\par
+            return value\par
+\par
+        if hasattr(value, "as_dict"):\par
+            try:\par
+                return Analyst._json_safe(\par
+                    value.as_dict()\par
+                )\par
+            except Exception:\par
+                pass\par
+\par
+        return str(value)\par
+\par
+    @staticmethod\par
+    def _normalize_timestamp(\par
+        value: float,\par
+    ) -> float:\par
+        timestamp = float(value)\par
+\par
+        while timestamp > 10_000_000_000:\par
+            timestamp /= 1000.0\par
+\par
+        return timestamp\par
+\par
+    @staticmethod\par
+    def _clip01(\par
+        value: float,\par
+    ) -> float:\par
+        return min(\par
+            max(\par
+                float(value),\par
+                0.0,\par
+            ),\par
+            1.0,\par
+        )\par
+\par
+    @staticmethod\par
+    def _build_logger() -> logging.Logger:\par
+        logger = logging.getLogger(\par
+            "personal_ai_trading_analyst"\par
+        )\par
+\par
+        level = getattr(\par
+            logging,\par
+            str(CONFIG.LOG_LEVEL).upper(),\par
+            logging.INFO,\par
+        )\par
+\par
+        logger.setLevel(level)\par
+        logger.propagate = False\par
+\par
+        if logger.handlers:\par
+            return logger\par
+\par
+        log_path = CONFIG.LOG_DIR / "analyst.log"\par
+\par
+        handler = RotatingFileHandler(\par
+            log_path,\par
+            maxBytes=5_000_000,\par
+            backupCount=3,\par
+            encoding="utf-8",\par
+        )\par
+\par
+        formatter = logging.Formatter(\par
+            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"\par
+        )\par
+\par
+        handler.setFormatter(formatter)\par
+        logger.addHandler(handler)\par
+\par
+        return logger\f0\par
+}
+ 

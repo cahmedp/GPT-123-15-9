@@ -1,0 +1,18 @@
+# Personal AI Trading Analyst - Final Dependencies
+# Python 3.12+
+
+rich>=15.0.0
+python-dotenv>=1.2.3
+pandas>=3.0.5
+numpy>=2.5.3
+scipy>=1.16.0
+scikit-learn>=1.7.0
+joblib>=1.5.0
+pydantic>=2.11.0
+networkx>=3.5
+httpx>=0.28.0
+BinaryOptionsToolsV2>=0.2.15
+
+
+
+

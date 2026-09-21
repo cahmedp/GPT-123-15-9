@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Secrets
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temporary
+*.tmp
+*.bak
+
+# Archives
+*.zip
+*.rar
+*.7z
+
+# Large generated reports
+project_code_snapshot.txt
+imports_map.txt
+bot_intelligence_inventory.txt
+code_components_inventory.txt
+latest_python_files.txt
+project_python_files.txt
+project_structure.txt
+tree_structure.txt
+market_intelligence_source.txt
+
+# Backups
+*_backup.py

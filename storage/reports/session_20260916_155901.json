@@ -1,0 +1,64 @@
+{
+  "app": "Personal AI Trading Analyst",
+  "version": "1.0.0",
+  "mode": "CONSULTANT",
+  "execution_enabled": false,
+  "asset": "GBPUSD_otc",
+  "generated_at": 1789563541.299866,
+  "fatal_error": "PocketConnectionError: Pocket Option connection failed: PocketOptionError: PocketOptionError, Core error: Failed to parse ssid: JSON parsing error: invalid type: boolean `true`, expected u32 at line 1 column 53 (Recovery also failed: invalid type: boolean `true`, expected u32 at line 1 column 53)",
+  "session": {
+    "started_at": "2026-09-16 12:59:00.966072+00:00",
+    "now": "2026-09-16 12:59:01.299865+00:00",
+    "elapsed_seconds": 0.32800000000861473,
+    "remaining_seconds": 28799.67199999999,
+    "max_runtime_seconds": 28800.0,
+    "stop_requested": true,
+    "stop_reason": "fatal_error"
+  },
+  "connector": {
+    "connected": false,
+    "asset": "GBPUSD_otc",
+    "reconnect_count": 0,
+    "last_error": "PocketOptionError: PocketOptionError, Core error: Failed to parse ssid: JSON parsing error: invalid type: boolean `true`, expected u32 at line 1 column 53 (Recovery also failed: invalid type: boolean `true`, expected u32 at line 1 column 53)"
+  },
+  "memory": {
+    "total_cases": 0,
+    "resolved_cases": 0,
+    "unresolved_cases": 0,
+    "bullish_cases": 0,
+    "bearish_cases": 0,
+    "wait_cases": 0,
+    "positive_outcomes": 0,
+    "negative_outcomes": 0,
+    "neutral_outcomes": 0,
+    "average_confidence": 0.0,
+    "average_uncertainty": 0.0,
+    "latest_case_timestamp": null
+  },
+  "knowledge": {
+    "total_items": 0,
+    "active_items": 0,
+    "inactive_items": 0,
+    "total_observations": 0,
+    "resolved_observations": 0,
+    "empirical_success_rate": null,
+    "average_confidence": 0.0,
+    "average_reliability": 0.0
+  },
+  "journal": {
+    "total": 0,
+    "closed": 0,
+    "wins": 0,
+    "losses": 0,
+    "win_rate": 0.0
+  },
+  "learning": null,
+  "goals": [],
+  "pending_analytical_evaluations": 0,
+  "last_market": null,
+  "last_regime": null,
+  "last_debate": null,
+  "last_world": null,
+  "last_simulation": null,
+  "last_final_advisory": null
+}

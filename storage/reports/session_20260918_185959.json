@@ -1,0 +1,64 @@
+{
+  "app": "Personal AI Trading Analyst",
+  "version": "1.0.0",
+  "mode": "CONSULTANT",
+  "execution_enabled": false,
+  "asset": "GBPUSD",
+  "generated_at": 1789747199.3274863,
+  "fatal_error": "TypeError: ExplanationEngine.explain() got an unexpected keyword argument 'action'",
+  "session": {
+    "started_at": "2026-09-18 15:56:14.810202+00:00",
+    "now": "2026-09-18 15:59:59.327486+00:00",
+    "elapsed_seconds": 224.51600000000326,
+    "remaining_seconds": 28575.483999999997,
+    "max_runtime_seconds": 28800.0,
+    "stop_requested": true,
+    "stop_reason": "fatal_error"
+  },
+  "connector": {
+    "connected": false,
+    "asset": "GBPUSD",
+    "reconnect_count": 0,
+    "last_error": null
+  },
+  "memory": {
+    "total_cases": 600,
+    "resolved_cases": 587,
+    "unresolved_cases": 13,
+    "bullish_cases": 0,
+    "bearish_cases": 0,
+    "wait_cases": 600,
+    "positive_outcomes": 248,
+    "negative_outcomes": 339,
+    "neutral_outcomes": 0,
+    "average_confidence": 0.052114246817601954,
+    "average_uncertainty": 0.7143700742841427,
+    "latest_case_timestamp": 1789752150.0
+  },
+  "knowledge": {
+    "total_items": 0,
+    "active_items": 0,
+    "inactive_items": 0,
+    "total_observations": 0,
+    "resolved_observations": 0,
+    "empirical_success_rate": null,
+    "average_confidence": 0.0,
+    "average_reliability": 0.0
+  },
+  "journal": {
+    "total": 600,
+    "closed": 587,
+    "wins": 248,
+    "losses": 339,
+    "win_rate": 0.42248722316865417
+  },
+  "learning": null,
+  "goals": [],
+  "pending_analytical_evaluations": 0,
+  "last_market": null,
+  "last_regime": null,
+  "last_debate": null,
+  "last_world": null,
+  "last_simulation": null,
+  "last_final_advisory": null
+}

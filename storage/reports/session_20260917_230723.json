@@ -1,0 +1,64 @@
+{
+  "app": "Personal AI Trading Analyst",
+  "version": "1.0.0",
+  "mode": "CONSULTANT",
+  "execution_enabled": false,
+  "asset": "GBPUSD",
+  "generated_at": 1789675643.8396795,
+  "fatal_error": "StopAsyncIteration: ",
+  "session": {
+    "started_at": "2026-09-17 20:07:11.300780+00:00",
+    "now": "2026-09-17 20:07:23.839679+00:00",
+    "elapsed_seconds": 12.547000000020489,
+    "remaining_seconds": 28787.45299999998,
+    "max_runtime_seconds": 28800.0,
+    "stop_requested": true,
+    "stop_reason": "fatal_error"
+  },
+  "connector": {
+    "connected": false,
+    "asset": "GBPUSD",
+    "reconnect_count": 0,
+    "last_error": null
+  },
+  "memory": {
+    "total_cases": 3,
+    "resolved_cases": 2,
+    "unresolved_cases": 1,
+    "bullish_cases": 0,
+    "bearish_cases": 0,
+    "wait_cases": 3,
+    "positive_outcomes": 1,
+    "negative_outcomes": 1,
+    "neutral_outcomes": 0,
+    "average_confidence": 0.0,
+    "average_uncertainty": 0.75,
+    "latest_case_timestamp": 1789579770.0
+  },
+  "knowledge": {
+    "total_items": 0,
+    "active_items": 0,
+    "inactive_items": 0,
+    "total_observations": 0,
+    "resolved_observations": 0,
+    "empirical_success_rate": null,
+    "average_confidence": 0.0,
+    "average_reliability": 0.0
+  },
+  "journal": {
+    "total": 3,
+    "closed": 2,
+    "wins": 1,
+    "losses": 1,
+    "win_rate": 0.5
+  },
+  "learning": null,
+  "goals": [],
+  "pending_analytical_evaluations": 0,
+  "last_market": null,
+  "last_regime": null,
+  "last_debate": null,
+  "last_world": null,
+  "last_simulation": null,
+  "last_final_advisory": null
+}
